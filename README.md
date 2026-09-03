@@ -48,14 +48,26 @@ Everything shells out to your installed `git`, so behavior matches the command l
 
 Use `npm run watch` instead of `compile` if you want incremental rebuilds while editing.
 
-## Install a prebuilt release (no build needed)
+## Install from the extension gallery (recommended, auto-updates)
 
-The quickest way to test:
+Kiro pulls extensions from the [Open VSX Registry](https://open-vsx.org), so once this extension is published there you can install it from Kiro's built-in Extensions view and it will **auto-update** like any other gallery extension:
+
+1. Open the Extensions view in Kiro.
+2. Search for **Kiro Worktrees**.
+3. Click **Install**. Updates arrive automatically.
+
+This is the preferred route for testers — no manual re-downloading when a new version ships.
+
+## Install a prebuilt release (manual, no auto-update)
+
+If the extension is not yet on the gallery, or you want a specific build, grab the `.vsix` directly:
 
 1. Download the latest `kiro-worktrees-<version>.vsix` from the [Releases page](https://github.com/clvsushant/kiro-worktrees/releases).
 2. Install it:
    - **VS Code:** `code --install-extension kiro-worktrees-<version>.vsix`, or the Extensions view > `...` menu > *Install from VSIX*.
    - **Kiro:** use the Extensions view's *Install from VSIX* option, or the equivalent CLI for your Kiro build.
+
+Note: a manually installed `.vsix` does **not** auto-update — you'll need to reinstall to get newer versions. Install from the gallery (above) for automatic updates.
 
 ## Package a .vsix yourself
 
@@ -124,14 +136,34 @@ The parser is deliberately a pure function (no I/O), which keeps these tests fas
 Two GitHub Actions workflows live in `.github/workflows/`:
 
 - **CI** (`ci.yml`) — runs on every push and pull request to `main`. Installs dependencies, compiles, and runs the test suite.
-- **Release** (`release.yml`) — runs when a `v*` tag is pushed. It tests, packages the `.vsix`, and creates a GitHub Release with the `.vsix` attached and auto-generated release notes.
+- **Release** (`release.yml`) — runs when a `v*` tag is pushed. It tests, packages the `.vsix`, publishes to the Open VSX Registry (if configured), and creates a GitHub Release with the `.vsix` attached and auto-generated release notes.
 
 To cut a release:
 
 ```bash
 # bump the version in package.json first, then:
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 The workflow builds and publishes the release automatically.
+
+### Publishing to Open VSX (for auto-update)
+
+For the extension to auto-update in Kiro, it must be published to the [Open VSX Registry](https://open-vsx.org), which Kiro uses as its extension gallery. The release workflow does this automatically when an `OVSX_PAT` repository secret is present; without it, the Open VSX step is skipped and the GitHub Release still succeeds.
+
+One-time maintainer setup:
+
+1. Sign in to [open-vsx.org](https://open-vsx.org) with GitHub and create an **Access Token** (from your user settings).
+2. Create/claim the publisher **namespace** that matches the `publisher` field in `package.json`:
+   ```bash
+   npx ovsx create-namespace <publisher> -p <token>
+   ```
+3. Add the token as a GitHub Actions secret named `OVSX_PAT` (repo *Settings > Secrets and variables > Actions*).
+
+After that, every `v*` tag both cuts a GitHub Release and publishes to Open VSX. To publish an already-built `.vsix` manually:
+
+```bash
+npm run package
+npx ovsx publish --packagePath kiro-worktrees-<version>.vsix -p <token>
+```

@@ -11,6 +11,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,6 +31,18 @@ jobs:
 
       - name: Package extension
         run: npm run package
+
+      - name: Resolve VSIX path
+        id: vsix
+        run: echo "path=$(ls kiro-worktrees-*.vsix | head -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Open VSX
+        # Kiro (and other VS Code forks) pull extensions and updates from the
+        # Open VSX Registry. Publishing here is what enables auto-update for
+        # users who installed from the gallery. Skipped automatically if the
+        # OVSX_PAT secret is not configured, so releases still succeed without it.
+        if: ${{ env.OVSX_PAT != '' }}
+        run: npx ovsx publish --packagePath "${{ steps.vsix.outputs.path }}" -p "$OVSX_PAT"
 
       - name: Create GitHub Release and attach VSIX
         uses: softprops/action-gh-release@v2
