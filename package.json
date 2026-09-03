@@ -212,7 +212,8 @@
     "pretest": "npm run compile",
     "test": "node --test \"out/test/**/*.test.js\"",
     "package": "vsce package --no-dependencies",
-    "publish:ovsx": "ovsx publish --packagePath kiro-worktrees-1.0.1.vsix"
+    "publish:ovsx": "ovsx publish --packagePath kiro-worktrees-1.0.1.vsix",
+    "publish:vscode": "vsce publish --packagePath kiro-worktrees-1.0.1.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

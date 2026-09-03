@@ -50,13 +50,21 @@ Use `npm run watch` instead of `compile` if you want incremental rebuilds while 
 
 ## Install from the extension gallery (recommended, auto-updates)
 
-Kiro pulls extensions from the [Open VSX Registry](https://open-vsx.org), so once this extension is published there you can install it from Kiro's built-in Extensions view and it will **auto-update** like any other gallery extension:
+Installing from a gallery is the preferred route — no manual re-downloading when a new version ships, since gallery installs **auto-update**.
+
+**Kiro** (and other VS Code forks like VSCodium and Cursor) pull from the [Open VSX Registry](https://open-vsx.org):
 
 1. Open the Extensions view in Kiro.
 2. Search for **Kiro Worktrees**.
 3. Click **Install**. Updates arrive automatically.
 
-This is the preferred route for testers — no manual re-downloading when a new version ships.
+**VS Code** pulls from the [Visual Studio Marketplace](https://marketplace.visualstudio.com):
+
+1. Open the Extensions view in VS Code.
+2. Search for **Kiro Worktrees**.
+3. Click **Install**. Updates arrive automatically.
+
+The extension is published to both registries, so either editor can find and auto-update it.
 
 ## Install a prebuilt release (manual, no auto-update)
 
@@ -136,7 +144,7 @@ The parser is deliberately a pure function (no I/O), which keeps these tests fas
 Two GitHub Actions workflows live in `.github/workflows/`:
 
 - **CI** (`ci.yml`) — runs on every push and pull request to `main`. Installs dependencies, compiles, and runs the test suite.
-- **Release** (`release.yml`) — runs when a `v*` tag is pushed. It tests, packages the `.vsix`, publishes to the Open VSX Registry (if configured), and creates a GitHub Release with the `.vsix` attached and auto-generated release notes.
+- **Release** (`release.yml`) — runs when a `v*` tag is pushed. It tests, packages the `.vsix`, publishes to the Open VSX Registry and the VS Code Marketplace (each if configured), and creates a GitHub Release with the `.vsix` attached and auto-generated release notes.
 
 To cut a release:
 
@@ -166,4 +174,24 @@ After that, every `v*` tag both cuts a GitHub Release and publishes to Open VSX.
 ```bash
 npm run package
 npx ovsx publish --packagePath kiro-worktrees-<version>.vsix -p <token>
+```
+
+### Publishing to the VS Code Marketplace (for auto-update in VS Code)
+
+Stock VS Code pulls from the Microsoft Visual Studio Marketplace, a separate registry from Open VSX. Publishing here is **free** — the Azure DevOps account below is only used to mint an auth token, not to host anything. The release workflow publishes automatically when a `VSCE_PAT` repository secret is present; without it, the Marketplace step is skipped and the release still succeeds.
+
+One-time maintainer setup:
+
+1. Create a free [Azure DevOps](https://dev.azure.com) organization (sign in with a Microsoft account). This is only the token provider; it incurs no charge.
+2. In Azure DevOps, create a **Personal Access Token**:
+   - **Organization:** *All accessible organizations* (required, or `vsce` rejects the token).
+   - **Scopes:** *Marketplace → Manage*.
+3. Create a Marketplace **publisher** whose ID matches the `publisher` field in `package.json`, at the [publisher management page](https://marketplace.visualstudio.com/manage).
+4. Add the token as a GitHub Actions secret named `VSCE_PAT` (repo *Settings > Secrets and variables > Actions*).
+
+To publish an already-built `.vsix` manually:
+
+```bash
+npm run package
+npx vsce publish --packagePath kiro-worktrees-<version>.vsix -p <token>
 ```

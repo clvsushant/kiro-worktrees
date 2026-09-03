@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,6 +44,14 @@ jobs:
         # OVSX_PAT secret is not configured, so releases still succeed without it.
         if: ${{ env.OVSX_PAT != '' }}
         run: npx ovsx publish --packagePath "${{ steps.vsix.outputs.path }}" -p "$OVSX_PAT"
+
+      - name: Publish to VS Code Marketplace
+        # Stock VS Code installs pull extensions and updates from the Microsoft
+        # Visual Studio Marketplace. Publishing here lets VS Code users find and
+        # auto-update the extension. Skipped automatically if the VSCE_PAT secret
+        # is not configured, so releases still succeed without it.
+        if: ${{ env.VSCE_PAT != '' }}
+        run: npx vsce publish --packagePath "${{ steps.vsix.outputs.path }}" -p "$VSCE_PAT"
 
       - name: Create GitHub Release and attach VSIX
         uses: softprops/action-gh-release@v2
