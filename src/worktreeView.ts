@@ -118,6 +118,11 @@ export class WorktreeProvider
   >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
+  // Fires with the worktree count after each successful load, so the view can
+  // update its badge without running `git worktree list` a second time.
+  private readonly _onDidChangeCount = new vscode.EventEmitter<number>();
+  readonly onDidChangeCount = this._onDidChangeCount.event;
+
   constructor(private readonly getGit: () => Git | undefined) {}
 
   refresh(): void {
@@ -138,11 +143,13 @@ export class WorktreeProvider
     if (!git) {
       // No folder open / not a repo: viewsWelcome content handles the empty case,
       // so return nothing to let that show.
+      this._onDidChangeCount.fire(0);
       return [];
     }
 
     try {
       const worktrees = await git.listWorktrees();
+      this._onDidChangeCount.fire(worktrees.length);
       if (worktrees.length === 0) {
         return [];
       }
@@ -157,6 +164,7 @@ export class WorktreeProvider
       );
       return worktrees.map((wt) => new WorktreeItem(wt));
     } catch (err) {
+      this._onDidChangeCount.fire(0);
       const msg = err instanceof Error ? err.message : String(err);
       return [new MessageItem(`Error: ${msg}`, "error")];
     }

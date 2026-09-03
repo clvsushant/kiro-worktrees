@@ -33,29 +33,20 @@ export function activate(context: vscode.ExtensionContext): void {
   });
   context.subscriptions.push(treeView);
 
-  // Keep a badge on the view showing how many worktrees exist.
-  const updateBadge = async () => {
-    if (!git) {
-      treeView.badge = undefined;
-      treeView.message = undefined;
-      return;
-    }
-    try {
-      const list = await git.listWorktrees();
+  // Keep a badge on the view showing how many worktrees exist. The count comes
+  // from the provider's last load, so we don't run `git worktree list` twice.
+  context.subscriptions.push(
+    provider.onDidChangeCount((count) => {
       treeView.badge =
-        list.length > 0
-          ? { value: list.length, tooltip: `${list.length} worktree(s)` }
+        count > 0
+          ? { value: count, tooltip: `${count} worktree(s)` }
           : undefined;
-      treeView.message = undefined;
-    } catch {
-      treeView.badge = undefined;
-    }
-  };
+    })
+  );
 
   const refresh = async () => {
     git = await resolveGit();
     provider.refresh();
-    await updateBadge();
   };
 
   // Initial load and reload when the set of workspace folders changes.

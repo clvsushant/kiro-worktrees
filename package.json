@@ -2,7 +2,7 @@
   "name": "kiro-worktrees",
   "displayName": "Kiro Worktrees",
   "description": "Manage git worktrees from a sidebar: add (new/existing branch), remove, prune, list, and open in a new window.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "sushant-singh",
   "license": "MIT",
   "repository": {
@@ -16,9 +16,7 @@
     "SCM Providers",
     "Other"
   ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
