@@ -1,0 +1,222 @@
+{
+  "name": "kiro-worktrees",
+  "displayName": "Kiro Worktrees",
+  "description": "Manage git worktrees from a sidebar: add (new/existing branch), remove, prune, list, and open in a new window.",
+  "version": "1.0.0",
+  "publisher": "sushant-singh",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clvsushant/kiro-worktrees.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kiroWorktrees",
+          "title": "Worktrees",
+          "icon": "media/worktree.svg"
+        }
+      ]
+    },
+    "views": {
+      "kiroWorktrees": [
+        {
+          "id": "kiroWorktreesView",
+          "name": "Worktrees",
+          "icon": "media/worktree.svg",
+          "contextualTitle": "Git Worktrees"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "kiroWorktreesView",
+        "contents": "No git worktrees found, or this folder is not a git repository.\n[Add Worktree](command:kiroWorktrees.add)\n[Refresh](command:kiroWorktrees.refresh)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "kiroWorktrees.add",
+        "title": "Add Worktree",
+        "category": "Worktrees",
+        "icon": "$(add)"
+      },
+      {
+        "command": "kiroWorktrees.refresh",
+        "title": "Refresh",
+        "category": "Worktrees",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "kiroWorktrees.prune",
+        "title": "Prune Stale Worktrees",
+        "category": "Worktrees",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "kiroWorktrees.remove",
+        "title": "Remove Worktree",
+        "category": "Worktrees",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "kiroWorktrees.openInNewWindow",
+        "title": "Open in New Window",
+        "category": "Worktrees",
+        "icon": "$(empty-window)"
+      },
+      {
+        "command": "kiroWorktrees.openInCurrentWindow",
+        "title": "Open in Current Window",
+        "category": "Worktrees",
+        "icon": "$(window)"
+      },
+      {
+        "command": "kiroWorktrees.copyPath",
+        "title": "Copy Path",
+        "category": "Worktrees",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "kiroWorktrees.revealInOS",
+        "title": "Reveal in File Explorer",
+        "category": "Worktrees",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "kiroWorktrees.lock",
+        "title": "Lock Worktree",
+        "category": "Worktrees",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "kiroWorktrees.unlock",
+        "title": "Unlock Worktree",
+        "category": "Worktrees",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "kiroWorktrees.move",
+        "title": "Move Worktree...",
+        "category": "Worktrees",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "kiroWorktrees.repair",
+        "title": "Repair Worktree Links",
+        "category": "Worktrees",
+        "icon": "$(tools)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "kiroWorktrees.add",
+          "when": "view == kiroWorktreesView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "kiroWorktrees.refresh",
+          "when": "view == kiroWorktreesView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "kiroWorktrees.prune",
+          "when": "view == kiroWorktreesView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "kiroWorktrees.repair",
+          "when": "view == kiroWorktreesView",
+          "group": "overflow@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "kiroWorktrees.openInNewWindow",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree/",
+          "group": "inline@1"
+        },
+        {
+          "command": "kiroWorktrees.lock",
+          "when": "view == kiroWorktreesView && viewItem =~ /unlocked$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "kiroWorktrees.unlock",
+          "when": "view == kiroWorktreesView && viewItem =~ /\\.locked$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "kiroWorktrees.remove",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree\\.(locked|unlocked)$/",
+          "group": "inline@3"
+        },
+        {
+          "command": "kiroWorktrees.openInNewWindow",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree/",
+          "group": "1_open@1"
+        },
+        {
+          "command": "kiroWorktrees.openInCurrentWindow",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree/",
+          "group": "1_open@2"
+        },
+        {
+          "command": "kiroWorktrees.revealInOS",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree/",
+          "group": "2_actions@1"
+        },
+        {
+          "command": "kiroWorktrees.copyPath",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree/",
+          "group": "2_actions@2"
+        },
+        {
+          "command": "kiroWorktrees.move",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree\\.(locked|unlocked)$/",
+          "group": "2_actions@3"
+        },
+        {
+          "command": "kiroWorktrees.lock",
+          "when": "view == kiroWorktreesView && viewItem =~ /unlocked$/",
+          "group": "3_lock@1"
+        },
+        {
+          "command": "kiroWorktrees.unlock",
+          "when": "view == kiroWorktreesView && viewItem =~ /\\.locked$/",
+          "group": "3_lock@1"
+        },
+        {
+          "command": "kiroWorktrees.remove",
+          "when": "view == kiroWorktreesView && viewItem =~ /^worktree\\.(locked|unlocked)$/",
+          "group": "4_danger@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.24.0",
+    "typescript": "^5.4.0"
+  }
+}
