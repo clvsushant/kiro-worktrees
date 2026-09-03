@@ -48,27 +48,29 @@ Everything shells out to your installed `git`, so behavior matches the command l
 
 Use `npm run watch` instead of `compile` if you want incremental rebuilds while editing.
 
-## Package as a .vsix and install
+## Install a prebuilt release (no build needed)
 
-To install it permanently rather than running the dev host:
+The quickest way to test:
 
-1. Install the packaging tool (one time):
-   ```bash
-   npm install -g @vscode/vsce
-   ```
-2. Package:
-   ```bash
-   npm run compile
-   vsce package
-   ```
-   This produces `kiro-worktrees-0.1.0.vsix`.
-3. Install the `.vsix`:
-   - **VS Code:** `code --install-extension kiro-worktrees-0.1.0.vsix`, or the Extensions view > `...` menu > *Install from VSIX*.
-   - **Kiro:** use the Extensions view's *Install from VSIX* option if present, or the equivalent CLI for your Kiro build.
+1. Download the latest `kiro-worktrees-<version>.vsix` from the [Releases page](https://github.com/clvsushant/kiro-worktrees/releases).
+2. Install it:
+   - **VS Code:** `code --install-extension kiro-worktrees-<version>.vsix`, or the Extensions view > `...` menu > *Install from VSIX*.
+   - **Kiro:** use the Extensions view's *Install from VSIX* option, or the equivalent CLI for your Kiro build.
+
+## Package a .vsix yourself
+
+To build your own package instead of downloading a release:
+
+```bash
+npm install
+npm run package
+```
+
+This runs the packaging tool (`@vscode/vsce`, already a dev dependency) and produces `kiro-worktrees-<version>.vsix` in the project root. Install it the same way as a released `.vsix` above.
 
 ### Note on installing into Kiro
 
-The extension is standard VS Code extension code and compiles cleanly, but I have not verified `.vsix` installation on your specific Kiro build. If Kiro exposes *Install from VSIX* (Extensions view or command palette), it should load like any other extension. If it doesn't, the F5 Extension Development Host route above is the reliable way to run it. If you hit a snag installing into Kiro, tell me what you see and we'll adapt.
+The extension is standard VS Code extension code. Kiro uses the VS Code extension host, so if it exposes *Install from VSIX* (Extensions view or command palette), the extension loads like any other. If that option is not available on your build, the F5 Extension Development Host route above is the reliable way to run it.
 
 ## Project layout
 
@@ -77,10 +79,12 @@ kiro-worktrees-extension/
 ├── package.json          # manifest: view container, view, commands, menus
 ├── tsconfig.json
 ├── media/worktree.svg    # activity-bar icon
+├── .github/workflows/    # CI (build + test) and release (package + attach vsix)
 ├── src/
 │   ├── extension.ts      # activation + command handlers
 │   ├── git.ts            # git CLI wrapper + worktree parsing
-│   └── worktreeView.ts   # TreeDataProvider + tree items
+│   ├── worktreeView.ts   # TreeDataProvider + tree items
+│   └── test/             # unit tests (node:test)
 └── out/                  # compiled JS (generated)
 ```
 
@@ -89,3 +93,45 @@ kiro-worktrees-extension/
 - `git.ts` runs `git worktree list --porcelain` and parses it into a typed `Worktree[]`. It also wraps `worktree add/remove/prune` and lists branches for the pickers.
 - `worktreeView.ts` turns that list into tree items with branch labels, tooltips, and status icons.
 - `extension.ts` registers the view and commands, drives the add/remove/prune flows with native Quick Pick and Input Box prompts, and uses the built-in `vscode.openFolder` command to open worktrees in a new or current window.
+
+## Contributing
+
+Contributions are welcome. To get set up:
+
+1. Fork and clone the repo.
+2. Install dependencies: `npm install`.
+3. Make your changes in `src/`.
+4. Build and test: `npm run compile && npm test`.
+5. Try it live with F5 (Extension Development Host).
+6. Open a pull request against `main`. CI will compile and run the tests on your branch.
+
+Keep the code style consistent with the surrounding files, and add or update tests when you change parsing or git-interaction logic.
+
+## Testing
+
+Unit tests use Node's built-in test runner (`node:test`), so there is no extra test framework to install.
+
+```bash
+npm test
+```
+
+This compiles the project and runs everything under `src/test/`. The current suite focuses on `parseWorktreePorcelain` in `git.ts` — the parser that turns `git worktree list --porcelain` output into typed records — covering main/linked worktrees, detached HEAD, locked (with and without a reason), prunable, bare, CRLF line endings, and empty output.
+
+The parser is deliberately a pure function (no I/O), which keeps these tests fast and free of any dependency on a real git repository or the VS Code API. Command handlers that drive VS Code UI (Quick Pick, Input Box, `openFolder`) are not unit tested, since exercising them would require a full Extension Host harness; they are verified manually via the F5 dev host.
+
+## Continuous integration
+
+Two GitHub Actions workflows live in `.github/workflows/`:
+
+- **CI** (`ci.yml`) — runs on every push and pull request to `main`. Installs dependencies, compiles, and runs the test suite.
+- **Release** (`release.yml`) — runs when a `v*` tag is pushed. It tests, packages the `.vsix`, and creates a GitHub Release with the `.vsix` attached and auto-generated release notes.
+
+To cut a release:
+
+```bash
+# bump the version in package.json first, then:
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The workflow builds and publishes the release automatically.

@@ -27,6 +27,76 @@ export interface Worktree {
 }
 
 /**
+ * Parse the output of `git worktree list --porcelain` into typed records.
+ *
+ * The porcelain format lists one attribute per line, with records separated by
+ * a blank line. Each record starts with a `worktree <path>` line, followed by
+ * optional attributes (`HEAD`, `branch`, `detached`, `bare`, `prunable`,
+ * `locked`). The first record is always the main worktree.
+ *
+ * This is a pure function (no I/O) so it can be unit tested directly.
+ */
+export function parseWorktreePorcelain(output: string): Worktree[] {
+  const worktrees: Worktree[] = [];
+  let current: Partial<Worktree> | null = null;
+
+  const flush = () => {
+    if (current && current.path) {
+      worktrees.push({
+        path: current.path,
+        head: current.head ?? "",
+        branch: current.branch,
+        detached: current.detached ?? false,
+        bare: current.bare ?? false,
+        prunable: current.prunable ?? false,
+        isMain: false,
+        locked: current.locked ?? false,
+        lockReason: current.lockReason,
+      });
+    }
+    current = null;
+  };
+
+  for (const rawLine of output.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line === "") {
+      flush();
+      continue;
+    }
+    if (line.startsWith("worktree ")) {
+      flush();
+      current = { path: line.substring("worktree ".length) };
+    } else if (current) {
+      if (line.startsWith("HEAD ")) {
+        current.head = line.substring("HEAD ".length);
+      } else if (line.startsWith("branch ")) {
+        // e.g. "branch refs/heads/main" -> "main"
+        const ref = line.substring("branch ".length);
+        current.branch = ref.replace(/^refs\/heads\//, "");
+      } else if (line === "detached") {
+        current.detached = true;
+      } else if (line === "bare") {
+        current.bare = true;
+      } else if (line === "prunable" || line.startsWith("prunable ")) {
+        current.prunable = true;
+      } else if (line === "locked") {
+        current.locked = true;
+      } else if (line.startsWith("locked ")) {
+        current.locked = true;
+        current.lockReason = line.substring("locked ".length).trim();
+      }
+    }
+  }
+  flush();
+
+  // The first entry from `git worktree list` is always the main worktree.
+  if (worktrees.length > 0) {
+    worktrees[0].isMain = true;
+  }
+  return worktrees;
+}
+
+/**
  * A thin, promise-based wrapper around the `git` CLI, scoped to one repo root.
  * We shell out to git rather than depend on a library so behavior matches the
  * user's installed git exactly.
@@ -66,63 +136,7 @@ export class Git {
    */
   async listWorktrees(): Promise<Worktree[]> {
     const out = await this.run(["worktree", "list", "--porcelain"]);
-    const worktrees: Worktree[] = [];
-    let current: Partial<Worktree> | null = null;
-
-    const flush = () => {
-      if (current && current.path) {
-        worktrees.push({
-          path: current.path,
-          head: current.head ?? "",
-          branch: current.branch,
-          detached: current.detached ?? false,
-          bare: current.bare ?? false,
-          prunable: current.prunable ?? false,
-          isMain: false,
-          locked: current.locked ?? false,
-          lockReason: current.lockReason,
-        });
-      }
-      current = null;
-    };
-
-    for (const rawLine of out.split(/\r?\n/)) {
-      const line = rawLine.trim();
-      if (line === "") {
-        flush();
-        continue;
-      }
-      if (line.startsWith("worktree ")) {
-        flush();
-        current = { path: line.substring("worktree ".length) };
-      } else if (current) {
-        if (line.startsWith("HEAD ")) {
-          current.head = line.substring("HEAD ".length);
-        } else if (line.startsWith("branch ")) {
-          // e.g. "branch refs/heads/main" -> "main"
-          const ref = line.substring("branch ".length);
-          current.branch = ref.replace(/^refs\/heads\//, "");
-        } else if (line === "detached") {
-          current.detached = true;
-        } else if (line === "bare") {
-          current.bare = true;
-        } else if (line === "prunable" || line.startsWith("prunable ")) {
-          current.prunable = true;
-        } else if (line === "locked") {
-          current.locked = true;
-        } else if (line.startsWith("locked ")) {
-          current.locked = true;
-          current.lockReason = line.substring("locked ".length).trim();
-        }
-      }
-    }
-    flush();
-
-    // The first entry from `git worktree list` is always the main worktree.
-    if (worktrees.length > 0) {
-      worktrees[0].isMain = true;
-    }
-    return worktrees;
+    return parseWorktreePorcelain(out);
   }
 
   /** List local branch names (no decorations). */
