@@ -1,5 +1,6 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
+import * as path from "path";
 
 const execFileAsync = promisify(execFile);
 
@@ -127,6 +128,32 @@ export class Git {
       return out.trim() || null;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Resolve the common git directory shared by all worktrees. This is where the
+   * `worktrees/` bookkeeping and the shared `HEAD` live, so it's the right place
+   * to watch for worktree add/remove/prune and branch changes. Returns an
+   * absolute path, or null if cwd is not a repo.
+   */
+  async commonGitDir(): Promise<string | null> {
+    try {
+      const out = await this.run(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+      return out.trim() || null;
+    } catch {
+      // Older git may not support --path-format; fall back to the relative form
+      // resolved against the repo root.
+      try {
+        const rel = (await this.run(["rev-parse", "--git-common-dir"])).trim();
+        if (!rel) {
+          return null;
+        }
+        const root = await this.repoRoot();
+        return root ? path.resolve(root, rel) : rel;
+      } catch {
+        return null;
+      }
     }
   }
 

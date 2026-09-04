@@ -6,4 +6,5 @@ out/test/**
 tsconfig.json
 .gitignore
 .github/**
+media/icon.svg
 node_modules/**

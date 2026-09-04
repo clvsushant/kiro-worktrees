@@ -44,9 +44,53 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
+  // Debounce rapid bursts of file-watch events into a single tree refresh.
+  let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+  const scheduleRefresh = () => {
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+    }
+    refreshTimer = setTimeout(() => {
+      refreshTimer = undefined;
+      provider.refresh();
+    }, 250);
+  };
+
+  // Watches git worktree metadata so the view updates when worktrees are added,
+  // removed, pruned, or change branch outside the extension (e.g. from the
+  // terminal). Recreated whenever the active repo changes.
+  let watcher: vscode.FileSystemWatcher | undefined;
+
+  const setupWatcher = async () => {
+    watcher?.dispose();
+    watcher = undefined;
+    if (!git) {
+      return;
+    }
+    const gitDir = await git.commonGitDir();
+    if (!gitDir) {
+      return;
+    }
+    // `worktrees/` holds one subdir per linked worktree (add/remove/prune), and
+    // HEAD/refs changes cover branch switches. A glob over the common git dir
+    // captures all of these without watching the whole working tree.
+    const pattern = new vscode.RelativePattern(
+      gitDir,
+      "{HEAD,worktrees/**,refs/heads/**}"
+    );
+    watcher = vscode.workspace.createFileSystemWatcher(pattern);
+    watcher.onDidCreate(scheduleRefresh);
+    watcher.onDidDelete(scheduleRefresh);
+    watcher.onDidChange(scheduleRefresh);
+    // Not pushed to context.subscriptions individually: the watcher is disposed
+    // and recreated on each repo change, and the cleanup disposable below
+    // disposes the final one on deactivate.
+  };
+
   const refresh = async () => {
     git = await resolveGit();
     provider.refresh();
+    await setupWatcher();
   };
 
   // Initial load and reload when the set of workspace folders changes.
@@ -54,6 +98,16 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.workspace.onDidChangeWorkspaceFolders(() => void refresh())
   );
+
+  // Ensure the debounce timer and watcher are cleaned up on deactivate.
+  context.subscriptions.push({
+    dispose: () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+      watcher?.dispose();
+    },
+  });
 
   context.subscriptions.push(
     vscode.commands.registerCommand("kiroWorktrees.refresh", () => refresh())

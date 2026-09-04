@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f6df6"/>
+      <stop offset="1" stop-color="#1b3fb0"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="26" fill="url(#bg)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <!-- trunk -->
+    <line x1="40" y1="46" x2="40" y2="94"/>
+    <!-- branch out to a worktree node -->
+    <path d="M40 62 H70 a10 10 0 0 0 10 -10 V44"/>
+    <!-- second branch -->
+    <path d="M40 78 H70 a10 10 0 0 1 10 10 V96"/>
+  </g>
+  <g fill="#ffffff">
+    <!-- main node -->
+    <circle cx="40" cy="40" r="10"/>
+    <!-- worktree nodes -->
+    <circle cx="80" cy="38" r="9"/>
+    <circle cx="80" cy="98" r="9"/>
+    <!-- base node -->
+    <circle cx="40" cy="100" r="9"/>
+  </g>
+</svg>

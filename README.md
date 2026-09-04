@@ -1,5 +1,11 @@
 # Kiro Worktrees
 
+[![CI](https://github.com/clvsushant/kiro-worktrees/actions/workflows/ci.yml/badge.svg)](https://github.com/clvsushant/kiro-worktrees/actions/workflows/ci.yml)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/sushant-singh.kiro-worktrees?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=sushant-singh.kiro-worktrees)
+[![VS Code installs](https://img.shields.io/visual-studio-marketplace/i/sushant-singh.kiro-worktrees?label=installs)](https://marketplace.visualstudio.com/items?itemName=sushant-singh.kiro-worktrees)
+[![Open VSX](https://img.shields.io/open-vsx/v/sushant-singh/kiro-worktrees?label=Open%20VSX)](https://open-vsx.org/extension/sushant-singh/kiro-worktrees)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A sidebar extension for managing git worktrees without leaving your editor. Built as a standard VS Code extension, so it runs in Kiro (which uses the VS Code extension host) and in plain VS Code.
 
 ## Features

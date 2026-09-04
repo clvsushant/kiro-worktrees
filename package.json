@@ -2,12 +2,17 @@
   "name": "kiro-worktrees",
   "displayName": "Kiro Worktrees",
   "description": "Manage git worktrees from a sidebar: add (new/existing branch), remove, prune, list, and open in a new window.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "publisher": "sushant-singh",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/clvsushant/kiro-worktrees.git"
+  },
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1b3fb0",
+    "theme": "dark"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -15,6 +20,18 @@
   "categories": [
     "SCM Providers",
     "Other"
+  ],
+  "keywords": [
+    "git",
+    "worktree",
+    "worktrees",
+    "git worktree",
+    "branch",
+    "branches",
+    "scm",
+    "version control",
+    "parallel",
+    "checkout"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
@@ -212,8 +229,8 @@
     "pretest": "npm run compile",
     "test": "node --test \"out/test/**/*.test.js\"",
     "package": "vsce package --no-dependencies",
-    "publish:ovsx": "ovsx publish --packagePath kiro-worktrees-1.0.1.vsix",
-    "publish:vscode": "vsce publish --packagePath kiro-worktrees-1.0.1.vsix"
+    "publish:ovsx": "ovsx publish --packagePath kiro-worktrees-$npm_package_version.vsix",
+    "publish:vscode": "vsce publish --packagePath kiro-worktrees-$npm_package_version.vsix"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
